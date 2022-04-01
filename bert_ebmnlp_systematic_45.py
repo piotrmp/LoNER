@@ -261,6 +261,7 @@ for epoch in epoch_bar:
     # Per epoch predictions for semeval
     print('Now producing train preds \n')
     train_semeval_preds = SingleLabelPreds2semeval(arrayed_logits_list=train_predictions,
+                                                   label_dict=PIO_dict_with_None,
                                                    label_masks_array=train_booleans,
                                                    token_metas=train_pred_meta,
                                                    output_path=os.path.join(preds_folder ,
@@ -268,6 +269,7 @@ for epoch in epoch_bar:
                                                    merge_spans=True)
     print('Now producing dev preds \n')
     dev_semeval_preds = SingleLabelPreds2semeval(arrayed_logits_list=dev_predictions,
+                                                 label_dict=PIO_dict_with_None,
                                                  label_masks_array=dev_booleans,
                                                  token_metas=dev_pred_meta,
                                                  output_path=os.path.join(preds_folder ,
@@ -275,6 +277,7 @@ for epoch in epoch_bar:
                                                  merge_spans=True)
     print('Now producing test preds \n')
     test_semeval_preds = SingleLabelPreds2semeval(arrayed_logits_list=test_predictions,
+                                                  label_dict=PIO_dict_with_None,
                                                   label_masks_array=test_booleans,
                                                   token_metas=test_pred_meta,
                                                   output_path=os.path.join(preds_folder ,

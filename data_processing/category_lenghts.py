@@ -1,4 +1,4 @@
-# Average lengths of categories (in BERT tokens)
+# Average lengths of categories (in BERT tokens) - required for one of te versions of adaptive convolutional layers model
 
 PIO_average_lengths_dict = {'p_Age': 2,
                             'p_Sex': 1,

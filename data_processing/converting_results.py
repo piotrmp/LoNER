@@ -1,19 +1,10 @@
-from data_processing.into_bert import PTC_categories_dict, PTC_dict_with_None, BIO_dict, IOBES_dict
+from data_processing.into_bert import BIO_dict, IOBES_dict
 import tensorflow as tf
 import numpy as np
 from itertools import groupby
 
-def vectorLabel2strings(vector_label, label_dict=PTC_categories_dict):
-    '''Przerabiamy wektorowe etykiety na słowne dla tokenu'''
-    labels_list = list(label_dict.keys())
-    if 1 in vector_label:
-        label_ids = [i for i, value in enumerate(vector_label) if value == 1]
-        token_string_labels = [labels_list[i] for i in label_ids]
-    else:
-        token_string_labels = ['Outside']
-    return token_string_labels
 
-def propagandaID2string(category_id, label_dict = PTC_dict_with_None):
+def propagandaID2string(category_id, label_dict):
     categories = list(label_dict.keys())
     label = categories[category_id]
     return [label]
@@ -36,19 +27,18 @@ def propagandaIOBES_ID2string(category_id, label_dict = IOBES_dict):
 def stick_preds2tokens(sentence_tokens, sentence_string_labels):
     '''Dopasowujemy liste etykiet do listy tokenów'''
     assert len(sentence_tokens) == len(sentence_string_labels)
-    #string_labels = [vectorLabel2strings(label) for label in sentence_labels]
     labeled_list = [[tok,tags] for tok,tags in zip(sentence_tokens, sentence_string_labels)]
     
     return labeled_list
     
-def array_SLpreds2lists(list_of_array_preds, label_mask):
+def array_SLpreds2lists(list_of_array_preds, label_mask, label_dict):
     '''Bierzemy liste z predykcjami dla batchy (w arrayach), sklejamy ją w jedną całość,
        , przerabiamy softmaxy na etkiety [0001101...] i wybieramy tylko tokeny, które nie są
        [PAD], [SEP] czy [CLS]. Zwracamy pojedynczą listę z tagami dla kolejnych słów bez podziału na zdania'''
     concatenated_preds = np.concatenate(list_of_array_preds)
     argmaxed_preds = np.argmax(concatenated_preds, axis=-1)
     token_preds = tf.boolean_mask(argmaxed_preds, label_mask).numpy().tolist()
-    string_preds = [propagandaID2string(pred) for pred in token_preds]
+    string_preds = [propagandaID2string(pred, label_dict) for pred in token_preds]
     return string_preds
 
 def array_BIOpreds2lists(list_of_array_preds, label_mask):
@@ -71,22 +61,11 @@ def array_IOBESpreds2lists(list_of_array_preds, label_mask):
     string_preds = [propagandaIOBES_ID2string(pred) for pred in token_preds]
     return string_preds
 
-def array_preds2lists(list_of_array_preds, label_mask):
-    '''Bierzemy liste z predykcjami dla batchy (w arrayach), sklejamy ją w jedną całość,
-       , przerabiamy softmaxy na etkiety [0001101...] i wybieramy tylko tokeny, które nie są
-       [PAD], [SEP] czy [CLS]. Zwracamy pojedynczą listę z tagami dla kolejnych słów bez podziału na zdania'''
-    concatenated_preds = np.concatenate(list_of_array_preds)
-    argmaxed_preds = np.argmax(concatenated_preds, axis=-1)
-    token_preds = tf.boolean_mask(argmaxed_preds, label_mask).numpy().tolist()
-    string_preds = [vectorLabel2strings(pred) for pred in token_preds]
-    return string_preds
-
-
-def array_CRFpreds2lists(list_of_array_CRF_preds, label_mask):
+def array_CRFpreds2lists(list_of_array_CRF_preds, label_mask, label_dict):
 
     concatenated_preds = np.concatenate(list_of_array_CRF_preds)
     token_preds = tf.boolean_mask(concatenated_preds, label_mask).numpy().tolist()
-    string_preds = [propagandaID2string(pred) for pred in token_preds]
+    string_preds = [propagandaID2string(pred, label_dict) for pred in token_preds]
     return string_preds
 
 def array_CRF_BIOpreds2lists(list_of_array_CRF_BIO_preds, label_mask):
@@ -177,24 +156,16 @@ def preds2semeval(predictions, output_path, merge_spans=True):
     
     return text_preds # czyli None
 
+def CRFpreds2semeval(decoded_sequences_list, label_dict, label_masks_array, token_metas, output_path, merge_spans = True):
 
-def rawPreds2semeval(arrayed_logits_list, label_masks_array, token_metas, output_path, merge_spans = True):
-    '''Od predykcji w liście logitów do formatu semevalowego w txt'''
-    concatenated_preds = array_preds2lists(arrayed_logits_list, label_masks_array) # na tym etapie tokeny dostają swoje spany (start, end)
-    preds_with_spans = stick_preds2tokens(token_metas, concatenated_preds)
-    semeval_preds = preds2semeval(preds_with_spans, output_path, merge_spans=merge_spans)
-    return semeval_preds # None
-
-def CRFpreds2semeval(decoded_sequences_list, label_masks_array, token_metas, output_path, merge_spans = True):
-
-    concatenated_preds = array_CRFpreds2lists(decoded_sequences_list, label_masks_array)
+    concatenated_preds = array_CRFpreds2lists(decoded_sequences_list, label_masks_array, label_dict)
     preds_with_spans = stick_preds2tokens(token_metas, concatenated_preds)
     semeval_preds = preds2semeval(preds_with_spans, output_path, merge_spans=merge_spans)
     return semeval_preds
 
-def SingleLabelPreds2semeval(arrayed_logits_list, label_masks_array, token_metas, output_path, merge_spans = True):
+def SingleLabelPreds2semeval(arrayed_logits_list, label_dict, label_masks_array, token_metas, output_path, merge_spans = True):
 
-    concatenated_preds = array_SLpreds2lists(arrayed_logits_list, label_masks_array)
+    concatenated_preds = array_SLpreds2lists(arrayed_logits_list, label_masks_array, label_dict)
     preds_with_spans = stick_preds2tokens(token_metas, concatenated_preds)
     semeval_preds = preds2semeval(preds_with_spans, output_path, merge_spans=merge_spans)
     return semeval_preds
