@@ -1,6 +1,7 @@
 import math
 
-def KLdivergence(g_lengths_list, p_lengths_list, bin_size: int = 5):  # first gold then predicted
+def KLdivergence(g_lengths_list, p_lengths_list, bin_size: int = 5):
+
     all_possible_lengths = list(set(g_lengths_list + p_lengths_list))
     sorted_lengths = sorted(all_possible_lengths)
     num_bins = int((sorted_lengths[-1] - sorted_lengths[0]) / bin_size)
@@ -30,6 +31,7 @@ def KLdivergence(g_lengths_list, p_lengths_list, bin_size: int = 5):  # first go
 
 
 def KLdivergence_with_None(g_lengths_list, p_lengths_list, bin_size: int = 5):
+
     if len(p_lengths_list) == 0:
         return None
     else:
