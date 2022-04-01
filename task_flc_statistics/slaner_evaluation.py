@@ -8,9 +8,7 @@ import re
 
 
 def recalls_precs_fscores(preds_path, gold_path):
-    '''Outputs:
-        micro-averaged: precision, recall, f1, KL
-        macro-averaged: precision, recall, f1, KL'''
+    '''Produce a dict with evaluation statistics for a semeval-styled predictions file'''
     
     per_category_and_micro = precision_recall_fscore_dataset(preds_path, gold_path)
     per_category = per_category_and_micro.copy()
@@ -32,9 +30,8 @@ def recalls_precs_fscores(preds_path, gold_path):
 
 
 def matching_recalls_precs_fscores(preds_path, gold_path):
-    '''Outputs:
-        micro-averaged: precision, recall, f1, KL
-        macro-averaged: precision, recall, f1, KL'''
+    '''Produce a dict with evaluation statistics for a semeval-styled predictions file,
+        counting only perfect-matched propaganda spans'''
 
     per_category_and_micro = harsh_precision_recall_fscore_dataset(preds_path, gold_path)
     per_category = per_category_and_micro.copy()
@@ -59,9 +56,7 @@ def matching_recalls_precs_fscores(preds_path, gold_path):
 
 
 def recalls_precs_fscores_name(preds_path, gold_path, prefix):
-    '''Outputs:
-        micro-averaged: precision, recall, f1, KL
-        macro-averaged: precision, recall, f1, KL'''
+    '''Produce a dict with evaluation statistics for a semeval-styled predictions file'''
 
     per_category_and_micro = precision_recall_fscore_dataset(preds_path, gold_path)
     per_category = per_category_and_micro.copy()
@@ -90,6 +85,8 @@ def spans2lengths(span_list):
     return [int(i[1]) - int(i[0]) for i in span_list]
 
 def KLs(preds_path, gold_path, bin_size: int):
+    """Count Kullback–Leibler divergence between span-length
+        distributions of predictions and labels"""
     preds = labels2dict(preds_path)
     labels = labels2dict(gold_path)
     
@@ -129,6 +126,8 @@ def KLs(preds_path, gold_path, bin_size: int):
 
 
 def KLs_name(preds_path, gold_path, bin_size: int, prefix: str):
+    """Count Kullback–Leibler divergence between span-length
+            distributions of predictions and labels."""
     preds = labels2dict(preds_path)
     labels = labels2dict(gold_path)
 
@@ -192,6 +191,7 @@ def output_stats_dict(pred_path, gold_path, bin_size):
 
 
 def save_stats(submissions_folder_path, gold_path, bin_size, output_path):
+    """Saves statistics for all epochs to file"""
 
     prefix = ''
     if 'dev' in gold_path:

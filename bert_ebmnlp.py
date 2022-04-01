@@ -3,7 +3,8 @@ from data_processing.into_bert import find_file, PIO_categories_dict, PIO_dict_w
 from data_processing.converting_results import SingleLabelPreds2semeval
 from data_processing.processing import output_artIDs_tokens_offsets
 from task_flc_statistics.saving_statistics import output_multi_stats, multi_update
-from Models.hub_based_single_label_bert import BertPTC_sl
+from task_flc_statistics.recall_precision_f1 import pio_categories
+from Models.bert import BertPTC_sl
 from tensorflow.keras.optimizers import Adam
 from sklearn.metrics import accuracy_score
 from fastprogress import master_bar, progress_bar
@@ -24,12 +25,12 @@ os.makedirs(stats_folder, exist_ok=True)
 os.makedirs(preds_folder, exist_ok=True)
 
 
-train_abstracts_path = '/home/users/piotrmp/corpus_data/PICO_9999/train_abstracts'
-dev_abstracts_path = '/home/users/piotrmp/corpus_data/PICO_9999/dev_abstracts'
-test_abstracts_path = '/home/users/piotrmp/corpus_data/PICO_9999/test_abstracts'
-train_labels_path = '/home/users/piotrmp/corpus_data/PICO_9999/train_labels.txt'
-dev_labels_path = '/home/users/piotrmp/corpus_data/PICO_9999/dev_labels.txt'
-test_labels_path = '/home/users/piotrmp/corpus_data/PICO_9999/test_labels.txt'
+train_abstracts_path = 'PICO_9999/train_abstracts'
+dev_abstracts_path = 'PICO_9999/dev_abstracts'
+test_abstracts_path = 'PICO_9999/test_abstracts'
+train_labels_path = 'PICO_9999/train_labels.txt'
+dev_labels_path = 'PICO_9999/dev_labels.txt'
+test_labels_path = 'PICO_9999/test_labels.txt'
 
 sequence_length = 200
 batch_size = 4
@@ -278,7 +279,8 @@ for epoch in epoch_bar:
         os.path.join(stats_folder, f'test_preds_epoch_{epoch + 1}.txt'),
         train_labels_path,
         dev_labels_path,
-        test_labels_path)
+        test_labels_path,
+        pio_categories)
     # Add Per epoch statistics to final statistics
     train_stats_2 = {'train_losses': str(round(train_losses[-1], 4)),
                      'train_accs': str(round(train_accuracies[-1], 4))}

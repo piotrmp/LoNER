@@ -2,9 +2,10 @@ from data_processing.into_bert_2 import prepare_single_label_input_arrays, creat
 from data_processing.into_bert import PTC_dict_with_None
 from data_processing.processing import output_artIDs_tokens_offsets
 from task_flc_statistics.saving_statistics import output_multi_stats, multi_update
+from task_flc_statistics.recall_precision_f1 import propaganda_categories
 from data_processing.converting_results import SingleLabelPreds2semeval
 from data_processing.into_bert import find_file
-from Models.hub_based_single_label_bert import BertPTC_sl
+from Models.bert import BertPTC_sl
 from tensorflow.keras.optimizers import Adam
 from sklearn.metrics import accuracy_score
 from fastprogress import master_bar, progress_bar
@@ -254,12 +255,15 @@ for epoch in epoch_bar:
                                                   merge_spans=True)
     print('Counting f-scores\n')
 
-    train_stats, dev_stats, test_stats, train_mm, dev_mm, test_mm = output_multi_stats(os.path.join(stats_folder, f'train_preds_epoch_{epoch + 1}.txt'),
-                                                                                       os.path.join(stats_folder, f'dev_preds_epoch_{epoch + 1}.txt'),
-                                                                                       os.path.join(stats_folder, f'test_preds_epoch_{epoch + 1}.txt'),
-                                                                                       train_labels_path,
-                                                                                       dev_labels_path,
-                                                                                       test_labels_path)
+    train_stats, dev_stats, test_stats, train_mm, dev_mm, test_mm = output_multi_stats(
+        os.path.join(stats_folder, f'train_preds_epoch_{epoch + 1}.txt'),
+        os.path.join(stats_folder, f'dev_preds_epoch_{epoch + 1}.txt'),
+        os.path.join(stats_folder, f'test_preds_epoch_{epoch + 1}.txt'),
+        train_labels_path,
+        dev_labels_path,
+        test_labels_path,
+        propaganda_categories)
+
     # Add Per epoch statistics to final statistics
     train_stats_2 = {'train_losses': str(round(train_losses[-1], 4)),
                           'train_accs': str(round(train_accuracies[-1], 4))}

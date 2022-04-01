@@ -4,7 +4,7 @@ from data_processing.processing import output_artIDs_tokens_offsets
 from data_processing.converting_results import IOBESPreds2semeval
 from data_processing.into_bert import find_file
 from task_flc_statistics.saving_statistics import output_multi_stats, multi_update
-from Models.hub_based_single_label_bert import BertPTC_sl
+from Models.bert import BertPTC_sl
 from tensorflow.keras.optimizers import Adam
 from sklearn.metrics import accuracy_score
 from fastprogress import master_bar, progress_bar
@@ -42,6 +42,8 @@ test_labels_path = 'PTC/test_labels.txt'
 # Vocabulary and lables files
 print('Loading vocab file \n')
 vocabulary = find_file('vocab.txt', bert_model_path)
+propaganda_categories = list(PTC_categories_dict.keys())
+
 
 # Data processing part
 train_pred_meta = output_artIDs_tokens_offsets(texts_path=train_articles_path, vocab_path=vocabulary, nested=False,
@@ -260,7 +262,9 @@ for epoch in epoch_bar:
         os.path.join(stats_folder, f'test_preds_epoch_{epoch + 1}.txt'),
         train_labels_path,
         dev_labels_path,
-        test_labels_path)
+        test_labels_path,
+        propaganda_categories)
+
     # Add Per epoch statistics to final statistics
     train_stats_2 = {'train_losses': str(round(train_losses[-1], 4)),
                      'train_accs': str(round(train_accuracies[-1], 4))}
@@ -287,12 +291,12 @@ for epoch in epoch_bar:
 
 
 print("Looking for the best epoch according to F-score on dev.")
-bestF=-10
-bestEpoch=-10
+bestF = -10
+bestEpoch = -10
 for i in range(len(dev_results_dict['dev_micro_fscore'])):
-    if float(dev_results_dict['dev_micro_fscore'][i])>bestF:
-        bestF=float(dev_results_dict['dev_micro_fscore'][i])
-        bestEpoch=i
+    if float(dev_results_dict['dev_micro_fscore'][i]) > bestF:
+        bestF = float(dev_results_dict['dev_micro_fscore'][i])
+        bestEpoch = i
 
 
 print("Results on dev for best epoch ("+str(bestEpoch+1)+"): "+str(dev_results_print[bestEpoch]))

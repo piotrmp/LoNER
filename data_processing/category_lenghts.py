@@ -1,6 +1,6 @@
 # Average lengths of categories (in BERT tokens)
 
-PIO_average_lenghts_dict = {'p_Age': 2,
+PIO_average_lengths_dict = {'p_Age': 2,
                             'p_Sex': 1,
                             'p_Sample size': 1,
                             'p_Condition': 5,
@@ -19,7 +19,7 @@ PIO_average_lenghts_dict = {'p_Age': 2,
                             'o_Other': 4,
                             'None': 5}
 
-PTC_average_lenghts_dict = {
+PTC_average_lengths_dict = {
                             'Loaded_Language': 5,
                             'Name_Calling,Labeling': 5,
                             'Repetition': 3,

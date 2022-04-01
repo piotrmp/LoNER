@@ -16,6 +16,24 @@ propaganda_categories = ['Bandwagon,Reductio_ad_hitlerum',
                          'Name_Calling,Labeling',
                          'Loaded_Language']
 
+pio_categories = ['p_Age',
+                  'p_Sex',
+                  'p_Sample size',
+                  'p_Condition',
+                  'i_Surgical',
+                  'i_Physical',
+                  'i_Pharmacological',
+                  'i_Educational',
+                  'i_Psychological',
+                  'i_Other',
+                  'i_Control',
+                  'o_Physical',
+                  'o_Pain',
+                  'o_Mortality',
+                  'o_Adverse effects',
+                  'o_Mental',
+                  'o_Other']
+
 
 def flatten(t):
     '''Make a flat list out of list of lists'''
@@ -146,7 +164,7 @@ def HarshArticleCategoryNums(label_span_list, pred_span_list, matching_pred_span
     return Csts_s, Cstt_s, S, T
 
 
-def perArticleNums(article_label_dict:dict, article_pred_dict:dict, categories:list = propaganda_categories):
+def perArticleNums(article_label_dict:dict, article_pred_dict:dict, categories:list):
     '''
     Takes 2 dicts with propaganda categories as keys and span lists as values
     Outputs a dict with porpaganda categories as keys and lists with
@@ -184,7 +202,7 @@ def perArticleNums(article_label_dict:dict, article_pred_dict:dict, categories:l
     return nums_dict
 
 
-def HarshPerArticleNums(article_label_dict:dict, article_pred_dict:dict, matching_article_pred_dict: dict, categories:list = propaganda_categories):
+def HarshPerArticleNums(article_label_dict:dict, article_pred_dict:dict, matching_article_pred_dict: dict, categories:list):
     '''
     Takes 2 dicts with propaganda categories as keys and span lists as values
     Outputs a dict with porpaganda categories as keys and lists with
@@ -225,7 +243,7 @@ def HarshPerArticleNums(article_label_dict:dict, article_pred_dict:dict, matchin
     nums_dict['Overall result'] = [general_nums]
     return nums_dict
     
-def perDatasetNums(list_of_article_dicts, categories:list = propaganda_categories):
+def perDatasetNums(list_of_article_dicts, categories):
     '''
     Takes in a list of per article dicts resulting from use of perArticleNums func
     '''
@@ -270,7 +288,7 @@ def fscore(num_recall, num_precision):
         f = 0
     return f
 
-def precision_recall_fscore_dataset(predictions_path, labels_path):
+def precision_recall_fscore_dataset(predictions_path: str, labels_path: str, categories: list):
     '''
     Takes paths for semeval 2019,2020 style predictions and labels
     and outputs a dictionary with 14 propaganda categories + 'general'
@@ -291,9 +309,9 @@ def precision_recall_fscore_dataset(predictions_path, labels_path):
             pred_dict = all_preds[id]
         except KeyError:
             pred_dict = {}
-        article_num_dicts.append(perArticleNums(label_dict,pred_dict))
+        article_num_dicts.append(perArticleNums(label_dict,pred_dict, categories))
         
-    final_nums = perDatasetNums(article_num_dicts)
+    final_nums = perDatasetNums(article_num_dicts, categories)
     
     for category in list(final_nums.keys()):
         num_recall = recall(final_nums[category][1], final_nums[category][3])
@@ -308,7 +326,7 @@ def precision_recall_fscore_dataset(predictions_path, labels_path):
   
     return final_dict
 
-def harsh_precision_recall_fscore_dataset(predictions_path, labels_path):
+def harsh_precision_recall_fscore_dataset(predictions_path, labels_path, categories):
     '''
     Takes paths for semeval 2019,2020 style predictions and labels
     and outputs a dictionary with 14 propaganda categories + 'general'
@@ -335,9 +353,9 @@ def harsh_precision_recall_fscore_dataset(predictions_path, labels_path):
         except KeyError:
             matching_pred_dict = {}
 
-        article_num_dicts.append(HarshPerArticleNums(label_dict, pred_dict, matching_pred_dict))
+        article_num_dicts.append(HarshPerArticleNums(label_dict, pred_dict, matching_pred_dict, categories))
 
-    final_nums = perDatasetNums(article_num_dicts)
+    final_nums = perDatasetNums(article_num_dicts, categories)
 
     for category in list(final_nums.keys()):
         num_recall = recall(final_nums[category][1], final_nums[category][3])

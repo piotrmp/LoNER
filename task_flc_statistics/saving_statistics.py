@@ -1,12 +1,12 @@
-"""Quick funcs for combining output statostics"""
+"""Quick funcs for combining & saving output statistics during training"""
 from task_flc_statistics.recall_precision_f1 import precision_recall_fscore_dataset
 from task_flc_statistics.slaner_evaluation import output_stats_dict
 
 def output_multi_stats(train_preds_path, dev_preds_path, test_preds_path,
-                     train_labels_path, dev_labels_path, test_labels_path):
-    train_stats_dict = precision_recall_fscore_dataset(train_preds_path, train_labels_path)
-    dev_stats_dict = precision_recall_fscore_dataset(dev_preds_path, dev_labels_path)
-    test_stats_dict = precision_recall_fscore_dataset(test_preds_path, test_labels_path)
+                     train_labels_path, dev_labels_path, test_labels_path, categories):
+    train_stats_dict = precision_recall_fscore_dataset(train_preds_path, train_labels_path, categories)
+    dev_stats_dict = precision_recall_fscore_dataset(dev_preds_path, dev_labels_path, categories)
+    test_stats_dict = precision_recall_fscore_dataset(test_preds_path, test_labels_path, categories)
     train_micro_macro = output_stats_dict(train_preds_path, train_labels_path, bin_size=5)
     dev_micro_macro = output_stats_dict(dev_preds_path, dev_labels_path, bin_size=5)
     test_micro_macro = output_stats_dict(test_preds_path, test_labels_path, bin_size=5)
