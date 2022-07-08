@@ -15,41 +15,44 @@ import math
 import json
 import warnings
 import os
+import logging
+import sys
 
-bert_model_path = r'/home/users/piotrmp/TF_models/bert_base'
+warnings.simplefilter("ignore")
+logging.basicConfig(format='%(process)d-%(levelname)s-%(message)s', stream=sys.stdout, level=logging.INFO)
+
+bert_model_path = r'/home/users/piotrmp/TF_models/bert_base'  # Replace it with your local model path
 bert_model_name = os.path.basename(bert_model_path)
-output_folder = os.path.join(r'/home/users/piotrmp/out', bert_model_name)
+output_folder = os.path.join(r'/home/users/piotrmp/out', bert_model_name)# Replace it with your local outputs path
 stats_folder = os.path.join(output_folder, 'statistics')
 preds_folder = os.path.join(output_folder, 'predictions')
 os.makedirs(stats_folder, exist_ok=True)
 os.makedirs(preds_folder, exist_ok=True)
 
 
-train_abstracts_path = 'PICO_9999/train_abstracts'
-dev_abstracts_path = 'PICO_9999/dev_abstracts'
-test_abstracts_path = 'PICO_9999/test_abstracts'
-train_labels_path = 'PICO_9999/train_labels.txt'
-dev_labels_path = 'PICO_9999/dev_labels.txt'
-test_labels_path = 'PICO_9999/test_labels.txt'
+train_abstracts_path = 'PICO_9999/train_abstracts' # Replace it with local path to train_abstracts dir from unzipped PICO_dataset.zip
+dev_abstracts_path = 'PICO_9999/dev_abstracts'# Replace it with local path to dev_abstracts dir from unzipped PICO_dataset.zip
+test_abstracts_path = 'PICO_9999/test_abstracts'# Replace it with local path to test_abstracts dir from unzipped PICO_dataset.zip
+train_labels_path = 'PICO_9999/train_labels.txt' # Replace it with local path to train_labels file from unzipped PICO_dataset.zip
+dev_labels_path = 'PICO_9999/dev_labels.txt' # Replace it with local path to dev_labels file from unzipped PICO_dataset.zip
+test_labels_path = 'PICO_9999/test_labels.txt' # Replace it with local path to test_labels file from unzipped PICO_dataset.zi
 
+# You can manipulate those values
 variant = 45
 k_lengths = list(PIO_average_lengths_dict.values())
 sequence_length = 200
 batch_size = 4
 num_epochs = 50
 
-warnings.simplefilter("ignore")
 
 # Vocabulary and labels files
-print('Loading vocab file \n')
+logging.info('Loading vocab file')
 vocabulary = find_file('vocab.txt', bert_model_path)
 
 # Data processing part
-
+logging.info('Loading & processing training data')
 train_pred_meta = output_artIDs_tokens_offsets(texts_path=train_abstracts_path, vocab_path=vocabulary, nested=False,
                                                only_double_enter=False, sentence_length=sequence_length)
-print('Train meta loaded in')
-
 train_input_ids, train_input_masks, train_input_type, train_labels, train_booleans = prepare_single_label_input_arrays(
     texts_path=train_abstracts_path, labels_path=train_labels_path,
     vocab_path=vocabulary,
@@ -57,8 +60,6 @@ train_input_ids, train_input_masks, train_input_type, train_labels, train_boolea
     nested=False,
     only_double_enter=False,
     categories_dict=PIO_dict_with_None)
-
-print('Train data loaded in')
 
 zip_train_data = createZipDataset(train_input_ids,
                                   train_input_masks,
@@ -68,11 +69,9 @@ zip_train_data = createZipDataset(train_input_ids,
 
 zip_train_data = zip_train_data.batch(batch_size)
 
-
+logging.info('Loading & processing validation data')
 dev_pred_meta = output_artIDs_tokens_offsets(texts_path=dev_abstracts_path, vocab_path=vocabulary, nested=False,
                                              only_double_enter=False, sentence_length=sequence_length)
-print('Dev meta loadd in')
-
 dev_input_ids, dev_input_masks, dev_input_type, dev_labels, dev_booleans = prepare_single_label_input_arrays(
     texts_path=dev_abstracts_path, labels_path=dev_labels_path,
     vocab_path=vocabulary,
@@ -80,7 +79,6 @@ dev_input_ids, dev_input_masks, dev_input_type, dev_labels, dev_booleans = prepa
     nested=False,
     only_double_enter=False,
     categories_dict=PIO_dict_with_None)
-print('Train data loaded in')
 
 zip_dev_data = createZipDataset(dev_input_ids,
                                 dev_input_masks,
@@ -90,10 +88,9 @@ zip_dev_data = createZipDataset(dev_input_ids,
 
 zip_dev_data = zip_dev_data.batch(batch_size)
 
-
+logging.info('Loading & processing test data')
 test_pred_meta = output_artIDs_tokens_offsets(texts_path=test_abstracts_path, vocab_path=vocabulary, nested=False,
                                               only_double_enter=False, sentence_length=sequence_length)
-print('Test meta loaded in')
 
 test_input_ids, test_input_masks, test_input_type, test_labels, test_booleans = prepare_single_label_input_arrays(
     texts_path=test_abstracts_path, labels_path=test_labels_path,
@@ -103,7 +100,6 @@ test_input_ids, test_input_masks, test_input_type, test_labels, test_booleans = 
     only_double_enter=False,
     categories_dict=PIO_dict_with_None)
 
-print('Test data loaded in')
 
 zip_test_data = createZipDataset(test_input_ids,
                                  test_input_masks,
@@ -193,8 +189,8 @@ test_results_dict = {}
 dev_results_print = []
 test_results_print = []
 
-print('Start training')
-warnings.simplefilter("ignore")
+
+logging.info('Starting train, validate & test loop')
 for epoch in epoch_bar:
     # Collect statistics per epoch
     mean_train_loss = tf.keras.metrics.Mean()
@@ -259,7 +255,7 @@ for epoch in epoch_bar:
         test_predictions.append(batch_test_sequence)
 
     # Per epoch predictions for semeval
-    print('Now producing train preds \n')
+
     train_semeval_preds = SingleLabelPreds2semeval(arrayed_logits_list=train_predictions,
                                                    label_dict=PIO_dict_with_None,
                                                    label_masks_array=train_booleans,
@@ -267,7 +263,6 @@ for epoch in epoch_bar:
                                                    output_path=os.path.join(preds_folder ,
                                                                             f'train_preds_epoch_{epoch + 1}.txt'),
                                                    merge_spans=True)
-    print('Now producing dev preds \n')
     dev_semeval_preds = SingleLabelPreds2semeval(arrayed_logits_list=dev_predictions,
                                                  label_dict=PIO_dict_with_None,
                                                  label_masks_array=dev_booleans,
@@ -275,7 +270,6 @@ for epoch in epoch_bar:
                                                  output_path=os.path.join(preds_folder ,
                                                                           f'dev_preds_epoch_{epoch + 1}.txt'),
                                                  merge_spans=True)
-    print('Now producing test preds \n')
     test_semeval_preds = SingleLabelPreds2semeval(arrayed_logits_list=test_predictions,
                                                   label_dict=PIO_dict_with_None,
                                                   label_masks_array=test_booleans,
@@ -307,7 +301,6 @@ for epoch in epoch_bar:
     dev_results_dict = multi_update(dev_results_dict, dev_stats, dev_stats_2, dev_mm)
     test_results_dict = multi_update(test_results_dict, test_stats, test_stats_2, test_mm)
 
-    print('Outputing json with statistics')
     with open(os.path.join(stats_folder, f'train_stats_epoch_{epoch + 1}.txt'), 'w') as outfile:
         json.dump(train_results_dict, outfile, indent=3)
     with open(os.path.join(stats_folder, f'dev_stats_epoch_{epoch + 1}.txt'), 'w') as outfile:
@@ -315,7 +308,7 @@ for epoch in epoch_bar:
     with open(os.path.join(stats_folder, f'test_stats_epoch_{epoch + 1}.txt'), 'w') as outfile:
         json.dump(test_results_dict, outfile, indent=3)
 
-print("Looking for the best epoch according to F-score on dev.")
+logging.info("Looking for the best epoch according to F-score on dev.")
 bestF = -10
 bestEpoch = -10
 for i in range(len(dev_results_dict['dev_micro_fscore'])):
@@ -324,6 +317,5 @@ for i in range(len(dev_results_dict['dev_micro_fscore'])):
         bestEpoch = i
 
 
-print("Results on dev for best epoch ("+str(bestEpoch+1)+"): "+str(dev_results_print[bestEpoch]))
-print("Results on test for best epoch ("+str(bestEpoch+1)+"): "+str(test_results_print[bestEpoch]))
-print('Thanks and bye bye !!!')
+logging.info("Results on dev for best epoch (" + str(bestEpoch + 1) + "): " + str(dev_results_print[bestEpoch]))
+logging.info("Results on test for best epoch (" + str(bestEpoch + 1) + "): " + str(test_results_print[bestEpoch]))

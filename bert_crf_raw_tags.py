@@ -16,36 +16,41 @@ import math
 import json
 import warnings
 import os
+import logging
+import sys
 
 warnings.simplefilter("ignore")
+logging.basicConfig(format='%(process)d-%(levelname)s-%(message)s', stream=sys.stdout, level=logging.INFO)
 
+# You can manipulate those values
 sequence_length = 200
 batch_size = 4
 num_epochs = 50
 
-bert_model_path = r'/home/users/piotrmp/TF_models/bert_base'
+bert_model_path = r'/home/users/piotrmp/TF_models/bert_base' # Replace it with your local model path
 bert_model_name = os.path.basename(bert_model_path)
-output_folder = os.path.join(r'/home/users/piotrmp/out', bert_model_name)
+output_folder = os.path.join(r'/home/users/piotrmp/out', bert_model_name)# Replace it with your local outputs path
 stats_folder = os.path.join(output_folder, 'statistics')
 preds_folder = os.path.join(output_folder, 'predictions')
 os.makedirs(stats_folder, exist_ok=True)
 os.makedirs(preds_folder, exist_ok=True)
 
 
-train_articles_path = 'PTC/train_articles'
-dev_articles_path = 'PTC/dev_articles'
-test_articles_path = 'PTC/test_articles'
+train_articles_path = 'PTC/train_articles' # Replace it with local path to train_articles dir from unzipped PTC_dataset.zip
+dev_articles_path = 'PTC/dev_articles' # Replace it with local path to dev_articles dir from unzipped PTC_dataset.zip
+test_articles_path = 'PTC/test_articles' # Replace it with local path to test_articles dir from unzipped PTC_dataset.zip
 
-train_labels_path = 'PTC/train_labels.txt'
-dev_labels_path = 'PTC/dev_labels.txt'
-test_labels_path = 'PTC/test_labels.txt'
+train_labels_path = 'PTC/train_labels.txt' # Replace it with local path to train_lables.txt file from unzipped PTC_dataset.zip
+dev_labels_path = 'PTC/dev_labels.txt'# Replace it with local path to dev_lables.txt file from unzipped PTC_dataset.zip
+test_labels_path = 'PTC/test_labels.txt'# Replace it with local path to test_lables.txt file from unzipped PTC_dataset.zip
 
 
 # Vocabulary and lables files
-print('Loading vocab file \n')
+logging.info('Loading vocab file')
 vocabulary = find_file('vocab.txt', bert_model_path)
 
 # Data processing part
+logging.info('Loading & processing training data')
 train_pred_meta = output_artIDs_tokens_offsets(texts_path=train_articles_path, vocab_path=vocabulary, nested=False,
                                                only_double_enter=False, sentence_length=sequence_length)
 train_input_ids, train_input_masks, train_input_type, train_labels, train_booleans = prepare_single_label_input_arrays(
@@ -63,6 +68,8 @@ zip_train_data = createZipDataset(train_input_ids,
                                   train_booleans)
 
 zip_train_data = zip_train_data.batch(batch_size)
+
+logging.info('Loading & processing validation data')
 
 dev_pred_meta = output_artIDs_tokens_offsets(texts_path=dev_articles_path, vocab_path=vocabulary, nested=False,
                                              only_double_enter=False, sentence_length=sequence_length)
@@ -82,6 +89,7 @@ zip_dev_data = createZipDataset(dev_input_ids,
 
 zip_dev_data = zip_dev_data.batch(batch_size)
 
+logging.info('Loading & processing test data')
 test_pred_meta = output_artIDs_tokens_offsets(texts_path=test_articles_path, vocab_path=vocabulary, nested=False,
                                               only_double_enter=False, sentence_length=sequence_length)
 
@@ -102,6 +110,7 @@ zip_test_data = createZipDataset(test_input_ids,
 zip_test_data = zip_test_data.batch(batch_size)
 
 # Define the model
+logging.info('Loading Bert model')
 bert_body = BertPTC_CRF(float_type=tf.float32, num_labels=15, max_seq_length=sequence_length,
                         hub_path=bert_model_path)
 
@@ -238,7 +247,7 @@ for epoch in epoch_bar:
         test_predictions.append(batch_test_sequence)
     
     # Per epoch predictions for semeval
-    print('Now producing train preds \n')
+
     train_semeval_preds = CRFpreds2semeval(decoded_sequences_list=train_predictions,
                                            label_dict=PTC_dict_with_None,
                                            label_masks_array=train_booleans,
@@ -246,7 +255,7 @@ for epoch in epoch_bar:
                                            output_path=os.path.join(preds_folder,
                                                                     f'train_preds_epoch_{epoch + 1}.txt'),
                                            merge_spans=True)
-    print('Now producing dev preds \n')
+
     dev_semeval_preds = CRFpreds2semeval(decoded_sequences_list=dev_predictions,
                                          label_dict=PTC_dict_with_None,
                                          label_masks_array=dev_booleans,
@@ -254,7 +263,7 @@ for epoch in epoch_bar:
                                          output_path=os.path.join(preds_folder,
                                                                   f'dev_preds_epoch_{epoch + 1}.txt'),
                                          merge_spans=True)
-    print('Now producing test preds \n')
+
     test_semeval_preds = CRFpreds2semeval(decoded_sequences_list=test_predictions,
                                           label_dict=PTC_dict_with_None,
                                           label_masks_array=test_booleans,
@@ -287,7 +296,7 @@ for epoch in epoch_bar:
     dev_results_dict = multi_update(dev_results_dict, dev_stats, dev_stats_2, dev_mm)
     test_results_dict = multi_update(test_results_dict, test_stats, test_stats_2, test_mm)
 
-    print('Outputing json with statistics')
+
     with open(os.path.join(stats_folder, f'train_stats_epoch_{epoch + 1}.txt'), 'w') as outfile:
         json.dump(train_results_dict, outfile, indent=3)
     with open(os.path.join(stats_folder, f'dev_stats_epoch_{epoch + 1}.txt'), 'w') as outfile:
@@ -296,7 +305,7 @@ for epoch in epoch_bar:
         json.dump(test_results_dict, outfile, indent=3)
 
 
-print("Looking for the best epoch according to F-score on dev.")
+logging.info("Looking for the best epoch according to F-score on dev.")
 bestF = -10
 bestEpoch = -10
 for i in range(len(dev_results_dict['dev_micro_fscore'])):
@@ -305,7 +314,5 @@ for i in range(len(dev_results_dict['dev_micro_fscore'])):
         bestEpoch = i
 
 
-print("Results on dev for best epoch ("+str(bestEpoch+1)+"): "+str(dev_results_print[bestEpoch]))
-print("Results on test for best epoch ("+str(bestEpoch+1)+"): "+str(test_results_print[bestEpoch]))
-
-print('Thanks and bye bye !!!')
+logging.info("Results on dev for best epoch (" + str(bestEpoch + 1) + "): " + str(dev_results_print[bestEpoch]))
+logging.info("Results on test for best epoch (" + str(bestEpoch + 1) + "): " + str(test_results_print[bestEpoch]))
