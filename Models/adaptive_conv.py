@@ -9,6 +9,9 @@ def custom_w_init(kernel_size):
     return tf.constant_initializer(zeros)
 
 class Conv1SplitConcat(tf.keras.layers.Layer):
+    """Custom adaptive convolutional layer v.1.
+       Initialized with simple 000010000 kernels that evolve during training.
+       Each kernel length is tailored to specific propaganda category mean span length in training dataset"""
     def __init__(self, kernel_lenghts: list, sentence_length: int, trainable=True):
         super(Conv1SplitConcat, self).__init__()
         self.kernel_lengths = kernel_lenghts
@@ -34,7 +37,11 @@ class Conv1SplitConcat(tf.keras.layers.Layer):
         return tf.concat(outs, axis=-1)
 
 
+
 class AdaptiveGaussianConvLayer(tf.keras.layers.Layer):
+    """Custom adaptive convolutional layer v.2.
+       Parameters of gaussian distribution of kernels are passed during layer
+       initialization and behave as trainable parameters in the model"""
     def __init__(self):
         super(AdaptiveGaussianConvLayer, self).__init__()
         self.X = None

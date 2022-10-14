@@ -1,3 +1,7 @@
+"""Bert with simple CRF layer on top.
+    Words that ar enot part of the sentence (PADs and such) are masked.
+    Used for single label classification"""
+
 import tensorflow_hub as hub
 import tensorflow as tf
 from tensorflow_addons.layers import CRF

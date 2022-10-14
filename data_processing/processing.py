@@ -16,7 +16,10 @@ def dict_mean(dict_list: list):
 
 def output_artIDs_tokens_offsets(texts_path, vocab_path, sentence_length, nested=False, only_double_enter=False,
                                  normalize_encode=True, pack_sentences=True):
-    '''Ta funkcja potrzebna jest żeby podporządkować predykcje odpowiednim tokenom'''
+    '''
+    Tokenize the input and pair tokens with the assigned/predicted labels. If nested = True, list of lists is returned,
+    else, only one list,
+    '''
 
     documents = os.listdir(texts_path)
     documents = [os.path.join(texts_path, i) for i in documents]
@@ -39,17 +42,9 @@ def output_artIDs_tokens_offsets(texts_path, vocab_path, sentence_length, nested
 
 def output_tokens_and_tags(texts_path, labels_path, vocab_path, sentence_length, nested=False, only_double_enter=False,
                            normalize_encode=True, pack_sentences=True, parsing=False):
-    ''' -> texts_path = ścieżka do folderu z artykułami,
-        -> labels_path = ścieżka do pliku labels,
-        -> vocab_path = ścieżka do example_vocab.txt odpowiedniego modelu,
-        -> nested - jeżeli True, w przypadku nieznanych słów dostajemy subtokeny w zagbnieżdżonej liście,
-        jeżeli Flase, to wszytskie tokeny mają ten sam status
-        -> only_double_enter - jeśli True, artykuły są dzielone na zdania tylko po podójnym enterze,
-        jeżeli False, dzielimy po podówjnym, a jak nie ma to po pojedynczym
-        Funkcja zwraca dwie listy: w pierwszej są listy tokenów należących do koljnychh zdań,
-        w drugiej odpowiadające im listy tagów'''
-
-    print('Przerabiam pary arykuł - lista tagów na ztokenizowane zdania z tagami \n')
+    '''
+     Outputs two lists: list of all the tokens from the input data, and list of their matching labels
+     '''
     article_subpaths = os.listdir(texts_path)
     article_paths = [os.path.join(texts_path, i) for i in article_subpaths]
     ultimate_labels_dict = labels2dictOfdicts(labels_path)
@@ -73,5 +68,4 @@ def output_tokens_and_tags(texts_path, labels_path, vocab_path, sentence_length,
             if parsing:
                 parse_matrix = get_parse_matrix(chunk['text'], chunk_offsets)
             parse_matrices.append(parse_matrix)
-    print('OK zrobione! \n')
     return token_sentences, label_sentences, parse_matrices

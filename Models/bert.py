@@ -1,3 +1,6 @@
+"""Bert with linear classification layer on top.
+    For single label classification"""
+
 import tensorflow_hub as hub
 import tensorflow as tf
 

@@ -88,7 +88,7 @@ def prepare_single_label_IOBES_input_arrays(texts_path, labels_path, vocab_path,
 
 def createZipDataset(word_ids_array, word_masks_array, input_types_array, labels_vector_array, label_booleans_array,
                      parses_array=None):
-    print('Przerabiam ndarraye w tf.Datasety i sklejam je zipem')
+    """Takes input arrays and zips them into a Tensorflow zip Dataset"""
     dataset_input_ids = tf.data.Dataset.from_tensor_slices(word_ids_array)
     dataset_input_masks = tf.data.Dataset.from_tensor_slices(word_masks_array)
     dataset_segment_ids = tf.data.Dataset.from_tensor_slices(input_types_array)
@@ -102,6 +102,5 @@ def createZipDataset(word_ids_array, word_masks_array, input_types_array, labels
         zip_data = tf.data.Dataset.zip(
             (dataset_input_ids, dataset_input_masks, dataset_segment_ids, dataset_label_vecs, dataset_label_masks,
              dataset_parses))
-    print('OK zrobione! \n')
     return zip_data
 

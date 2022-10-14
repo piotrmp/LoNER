@@ -41,6 +41,7 @@ def flatten(t):
 
 
 def labels2list(labels_path):
+    """Load in text file with labels"""
     with open(labels_path, 'r', encoding='utf8') as labels:
         label_lines = labels.readlines()
         label_lines = [i.rstrip('\n').split('\t') for i in label_lines]
@@ -77,12 +78,9 @@ def labels2dict(labels_path):
 def matching_spans2dikt(labels_path: str, preds_path: str) -> dict:
     labels = labels2list(labels_path)
     preds = labels2list(preds_path)
-    # zostawiamy tylko te, które są identyczne - idealnie przewidziane
     label_lines = [i for i in labels if i in preds]
     by_article = [list(g) for k, g in itertools.groupby(label_lines, lambda x: x[0])]
-
     big_dikt = {}
-
     for article_labels in by_article:
         article_dikt = {}
         for span in article_labels:
@@ -337,7 +335,7 @@ def harsh_precision_recall_fscore_dataset(predictions_path, labels_path, categor
     all_labels = labels2dict(labels_path)
     all_preds = labels2dict(predictions_path)
     matching_preds = matching_spans2dikt(labels_path=labels_path, preds_path=predictions_path)
-    # Union of article ids prsent in either labels or predictions
+    # Union of article ids present in either labels or predictions
     all_art_ids = list(set(list(all_preds.keys())).union(set(list(all_labels.keys()))))
     for id in all_art_ids:
         try:
