@@ -76,6 +76,7 @@ def labels2dict(labels_path):
     return big_dikt
 
 def matching_spans2dikt(labels_path: str, preds_path: str) -> dict:
+    """Matches lables and predictions and outputs a dictionary used for counting evaluation statistics"""
     labels = labels2list(labels_path)
     preds = labels2list(preds_path)
     label_lines = [i for i in labels if i in preds]

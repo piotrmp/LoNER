@@ -10,7 +10,7 @@ def custom_w_init(kernel_size):
 
 class Conv1SplitConcat(tf.keras.layers.Layer):
     """Custom adaptive convolutional layer v.1.
-       Initialized with simple 000010000 kernels that evolve during training.
+       Initialized with simple 000010000-styled kernels that evolve during training.
        Each kernel length is tailored to specific propaganda category mean span length in training dataset"""
     def __init__(self, kernel_lenghts: list, sentence_length: int, trainable=True):
         super(Conv1SplitConcat, self).__init__()

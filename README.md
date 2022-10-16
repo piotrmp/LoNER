@@ -1,7 +1,7 @@
 ## Where Does It End? Long Named Entity Recognition for Propaganda Detection
 
 
-This repository contains the code for our paper [Where Does It End? Long Named Entity Recognition for Propaganda Detection](https://www.youtube.com/watch?v=dQw4w9WgXcQ) (Natural Language Engineering).
+This repository contains the code for our paper [Where Does It End? Long Named Entity Recognition for Propaganda Detection](https://www.youtube.com/watch?v=dQw4w9WgXcQ) (EACL submission).
 
 ## Overview
 

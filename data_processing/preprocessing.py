@@ -1,9 +1,3 @@
-"""Zestaw funkcji służących do zamienienia surowych danych semevalowych na prawie gotowe wejścia do BERTA
-    Logika jest mniej więcej taka:
-    1. Parujemy plik z tekstem artykułu z plikiem zawierającym informacje o spanach propagandowych
-    2. Tekst artykułu dzielimy na chunki, a info o spanach wsadzamy w słownik, gdzie kluczami są rodzaje propagandy,
-       a wartościami listy z tuplami zawierającymi offsety (start, end)"""
-
 import os, re, unicodedata
 from itertools import groupby
 from tensorflow_text.python.ops import BertTokenizer
@@ -62,6 +56,7 @@ def get_article_chunks(text_path, path_to_vocab, max_chunk_len, only_double_ente
 
 
 def triplets2dict(nested_list):
+    """Converts label-tuples into dictionaries """
     labels_dict = {}
     artID = int(nested_list[0][0])
     for dict_triple in nested_list:
@@ -75,6 +70,9 @@ def triplets2dict(nested_list):
 
 
 def labels2dictOfdicts(labels_path):
+    """Takes labels path as an input and produces a dictionary containing labels
+    and their metadata that will bal alter appended to the tokens they belong to"""
+
     with open(labels_path, 'r', encoding='utf-8') as f:
         everything = f.readlines()
     everything = [i.rstrip('\n').split('\t') for i in everything]
@@ -93,7 +91,7 @@ def labels2dictOfdicts(labels_path):
 
 
 def get_labels(article_path, all_labels_dict):
-    """extract article number from article path"""
+    """Extracts article number from the article path"""
     artID = int(re.findall('[0-9]+', os.path.basename(article_path))[0])
     try:
         article_labels_dict = all_labels_dict[artID]
@@ -104,7 +102,7 @@ def get_labels(article_path, all_labels_dict):
 
 
 def reorganize_tuple(tuple_with_lists):
-    '''Na potrzeby skryptu przerabiamy to co zwraca tokenizator w pzrypadku nieznanych słów'''
+    '''Convert the output when the tokenizer is fed unknow words'''
     if len(tuple_with_lists[0]) == 1:
         output = (tuple_with_lists[0][0], tuple_with_lists[1][0], tuple_with_lists[2][0])
     elif len(tuple_with_lists[0]) >= 1:
@@ -129,6 +127,7 @@ def label_token(token_tuple, labels_dict):
 
 
 def label_for_token(token_tuple, labels_dict):
+    """Appends label to a token based on the token offsets within the text-chunk"""
     resulting_tuple = []
     resulting_tuple.append(token_tuple[0])  # indeks słowa ze słownika
     for prop_cat in list(labels_dict.keys()):
@@ -140,17 +139,8 @@ def label_for_token(token_tuple, labels_dict):
     return resulting_tuple[1:]
 
 
-def label_token_dummy(token_tuple):
-    '''Appends dummy label to a token'''
-    
-    resulting_tuple = []
-    resulting_tuple.append(token_tuple[0])  # indeks słowa ze słownika
-    resulting_tuple.append('None')  # Nadajemy etykiete 'None'
-    return tuple(resulting_tuple)
-
-
 def update_offsets(reorganized_tuples, chunk_bo):
-    '''Uaktualnia ofsety tokenów biorąc pod uwage umiejscowienie chunku w dokumencie'''
+    """Updates token offsets taking into account chunk position within the original article"""
     reorganized_tuples_2 = []
     for i in reorganized_tuples:
         if type(i) == tuple:
@@ -162,7 +152,7 @@ def update_offsets(reorganized_tuples, chunk_bo):
 
 
 def produce_tokens_and_labels(chunked_text_dict, labels_dict, path_to_vocab, nested=False, normalize_encode=True):
-    '''Zwracamy oddzielnie tokeny a oddzielnie przynależne im etykiety'''
+    """Takes texts' and labels' dicts and produces lists containing tokens, their labels and their offsets"""
     
     base_unc_tokenizer = BertTokenizer(vocab_lookup_table=path_to_vocab,
                                        lower_case=True)
@@ -210,8 +200,9 @@ def produce_tokens_and_labels(chunked_text_dict, labels_dict, path_to_vocab, nes
 
 
 def produce_tokens_artIDs_offsets(chunked_text_dict, path_to_vocab, nested=False, normalize_encode=True):
-    '''Funkcja potrzebna do późniejszego podporządkowania predykcji do tokenów'''
-    
+    '''Takes a dictionary with chunk-text and article metadata and
+    produces a nested list that will later be used as a placeholder for nested list of predictions.'''
+
     base_unc_tokenizer = BertTokenizer(vocab_lookup_table=path_to_vocab,
                                        lower_case=True)
     if normalize_encode == True:
@@ -238,6 +229,6 @@ def produce_tokens_artIDs_offsets(chunked_text_dict, path_to_vocab, nested=False
                 tokens_with_details.append(detailed_subtokens)
             else:
                 tokens_with_details += detailed_subtokens
-    
+
     return tokens_with_details
 

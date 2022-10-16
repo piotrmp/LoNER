@@ -4,6 +4,7 @@ from task_flc_statistics.slaner_evaluation import output_stats_dict
 
 def output_multi_stats(train_preds_path, dev_preds_path, test_preds_path,
                      train_labels_path, dev_labels_path, test_labels_path, categories):
+    """Use train, valiation and test datasets to output epoch-wise statistics such as recall, fscore and KL"""
     train_stats_dict = precision_recall_fscore_dataset(train_preds_path, train_labels_path, categories)
     dev_stats_dict = precision_recall_fscore_dataset(dev_preds_path, dev_labels_path, categories)
     test_stats_dict = precision_recall_fscore_dataset(test_preds_path, test_labels_path, categories)
@@ -14,6 +15,7 @@ def output_multi_stats(train_preds_path, dev_preds_path, test_preds_path,
     return train_stats_dict, dev_stats_dict, test_stats_dict, train_micro_macro, dev_micro_macro, test_micro_macro
 
 def update_stats(final_dict, epoch_dict):
+    """Update final statistics dictionary with epoch stats"""
     for statistic in list(epoch_dict.keys()):
         if statistic not in list(final_dict.keys()):
             final_dict[statistic] = [epoch_dict[statistic]]
@@ -22,6 +24,7 @@ def update_stats(final_dict, epoch_dict):
     return final_dict
 
 def multi_update(final_dict, epoch_dict_1, epoch_dict_2, epoch_dict_3):
+    """Combine all update dicts into one per-epoch-update"""
     final_dict = update_stats(final_dict, epoch_dict_1)
     final_dict = update_stats(final_dict, epoch_dict_2)
     final_dict = update_stats(final_dict, epoch_dict_3)
