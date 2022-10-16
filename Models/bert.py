@@ -12,9 +12,10 @@ class BertPTC_sl():
         self.input_word_ids = tf.keras.layers.Input(shape=(max_seq_length,), dtype=tf.int32, name='input_word_ids')
         self.input_mask = tf.keras.layers.Input(shape=(max_seq_length,), dtype=tf.int32, name='input_mask')
         self.input_type_ids = tf.keras.layers.Input(shape=(max_seq_length,), dtype=tf.int32, name='input_type_ids')
+        # Bert
         self.encoder = hub.KerasLayer(hub_path, trainable=True)
 
-        # Custom parts
+        # Single label classification layer
         self.intermediate_classifier = tf.keras.layers.Dense(num_labels,
                                                              dtype=float_type, activation='relu')
         self.softmax_layer = tf.keras.layers.Softmax()

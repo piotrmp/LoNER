@@ -111,7 +111,7 @@ def merge_subtokens(span_tuple_list):
     return merged
 
 def merge_neighbour_spans(span_tuple_list):
-    """Merge close spans into single spans"""
+    """Merge close propaganda spans into single spans"""
     span_list = [list(i) for i in span_tuple_list]
     span_list.sort(key=lambda interval: interval[0])
     merged = [span_list[0]]
@@ -124,6 +124,7 @@ def merge_neighbour_spans(span_tuple_list):
     return merged
 
 def group_preds(tokens_with_preds):
+    """Groups predictions for tokens article-wise"""
     token_groups = []
     tokens_with_preds = sorted(tokens_with_preds, key= lambda x: x[0][3])
     for key, group in groupby(tokens_with_preds, lambda x: x[0][3]):
@@ -131,6 +132,8 @@ def group_preds(tokens_with_preds):
     return token_groups
 
 def list2dict(sorted_preds_list, merge_spans = False):
+    """Converts list with predicted labels into dictionaries
+        that are later saved into txt files"""
     preds_dict = {}
     preds_dict['artID'] = sorted_preds_list[0][0][3]
     for i in sorted_preds_list:
@@ -149,6 +152,7 @@ def list2dict(sorted_preds_list, merge_spans = False):
     return preds_dict
 
 def save_dicts2txt(article_dicts_list, save_path):
+    """Saves predictions for articles into semeval-style txt files"""
     with open(save_path, 'w') as f:
         for article_dict in article_dicts_list:
             for category in list(article_dict.keys()):
@@ -165,13 +169,13 @@ def save_dicts2txt(article_dicts_list, save_path):
     return None
 
 def preds2semeval(predictions, output_path, merge_spans=True):
-    '''Saves computed predictions to a text file'''
+    '''Takes raw predictions and saves them to a text file'''
     grouped_articles = group_preds(predictions)
     article_dicts = [list2dict(article, merge_spans=merge_spans)
                      for article in grouped_articles]
     text_preds = save_dicts2txt(article_dicts, output_path)
     
-    return text_preds # czyli None
+    return text_preds
 
 def CRFpreds2semeval(decoded_sequences_list, label_dict, label_masks_array, token_metas, output_path, merge_spans = True):
     """Computes semeval-style predictions and saves them to a text file"""

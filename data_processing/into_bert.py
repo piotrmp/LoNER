@@ -1,6 +1,6 @@
 import numpy as np
 import os
-
+# Empty-lengths categories dict for the PTC dataset
 PTC_categories_dict = {
     'Loaded_Language': 0,
     'Name_Calling,Labeling': 0,
@@ -17,7 +17,7 @@ PTC_categories_dict = {
     'Whataboutism,Straw_Men,Red_Herring': 0,
     'Bandwagon,Reductio_ad_hitlerum': 0
 }
-
+# Empty-lengths categories dict for the PICO dataset
 PIO_categories_dict = {
     'p_Age': 0,
     'p_Sex': 0,
@@ -53,6 +53,7 @@ for category in list(PTC_categories_dict.keys()):
     BIO_dict[f'I-{category}'] = 0
 BIO_dict['None'] = 0
 
+# IOBES scheme dict with 'None' as 'O'
 IOBES_dict = {}
 for category in list(PTC_categories_dict.keys()):
     IOBES_dict[f'S-{category}'] = 0
@@ -65,13 +66,15 @@ for category in list(PTC_categories_dict.keys()):
 IOBES_dict['None'] = 0
 
 def find_file(name, path):
-    '''Funkcja do szukania vocab.txt w plikach hubowych'''
+    '''Finds vocab.txt file inside hub-model path'''
     for root, dirs, files in os.walk(path):
         if name in files:
             return os.path.join(root, name)
 
 def singleLabel2array(labels_sentence, categories_dict):
-    '''Przerabia etykiety słowne na wektor długości 15 z tylko jedną jedynką'''
+    '''Converts string labels into numerical vectors of zeros and ones,
+     with the posision of "1" indicating the propaganda category
+    - propaganda category number id is based on the order of keys in the categories_dict argument'''
     sentence = []
     
     for i in labels_sentence:
@@ -89,6 +92,9 @@ def singleLabel2array(labels_sentence, categories_dict):
 
 
 def singleLabelBIO2array(labels_sentence, reference_dict, output_dict):
+    '''Converts string labels into numerical vectors of zeros and ones,
+     with the posision of "1" indicating the propaganda category (according to BIO - labeling scheme)
+        - propaganda category number id is based on the order of keys in the categories_dict argument'''
     string_single_labels = [i if type(i) == str else i[0] for i in labels_sentence]
     BIO_string_single_labels = []
     BIO_array_labels = []
@@ -119,6 +125,10 @@ def singleLabelBIO2array(labels_sentence, reference_dict, output_dict):
 
 
 def singleLabelIOBESarray(labels_sentence, reference_dict, output_dict):
+    '''Converts string labels into numerical vectors of zeros and ones,
+     with the posision of "1" indicating the propaganda category (according to IOBES - labeling scheme)
+        - propaganda category number id is based on the order of keys in the categories_dict argument'''
+
     string_single_labels = [i if type(i) == str else i[0] for i in labels_sentence]
     IOBES_string_single_labels = []
     IOBES_array_labels = []
@@ -173,16 +183,20 @@ def singleLabelIOBESarray(labels_sentence, reference_dict, output_dict):
 
 
 def tokens2bert(list_of_flat_sentences, parses=None, sentence_length=210):
-    '''Przerabiamy liste z listami tokenów na numpy arraye.
-       Do każdego zdania dodajemy CLS na początku i SEP na końcu'''
+    '''
+    Converts list of lists into numpy arrays.
+       Adds a CLS token at the beginning and the SEP token at the end of the sentence.
+       Produces 3 numpy ndarrays that later become an input for BERT:
+       - token ids array, masks array and segment array.
+       For reference go here: https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/4
+       '''
     all_token_ids = []
     all_masks = []
     all_segments = []
     all_parses = []
-    print('Przerabiam ztokenizowane zdania na 3x numpy array \n')
     for list_of_token_ids, parse in zip(list_of_flat_sentences, parses):
         list_of_token_ids = list_of_token_ids[
-                            :(sentence_length - 2)]  # skracamy żeby z CLS i SEP było maks tyle co sequence_length
+                            :(sentence_length - 2)]
         sent = [101] + list_of_token_ids + [102]  # ids' of CLS and SEP
         pad_len = sentence_length - len(sent)
         sent_ids_max = sent + [0] * pad_len
@@ -198,15 +212,13 @@ def tokens2bert(list_of_flat_sentences, parses=None, sentence_length=210):
             suffix = np.zeros((pad_len + 1, MAX_K))
             padded_parse = np.concatenate((prefix, parse, suffix), 0)
             all_parses.append(padded_parse)
-    print('OK zrobione! \n')
     return np.array(all_token_ids), np.array(all_masks), np.array(all_segments), np.array(all_parses)
 
 
 
 def singleLabels2bert(single_labels, reference_dict, sentence_length=210):
-    '''single_labels to lista [001...] wektorów dla tokenów
-       w kolejnych zdaniach. Wektory mają długość 18 + 1 - bo tyle jest
-       kategorii propagandowych + None'''
+    '''Converts label list of lists into numpy ndarrays that are fed into Bert model.
+    Adds PAD masks where the sentence is shorter than the sentence_lenght argument'''
     
     labels_vector = []
     bools_vector = []
@@ -229,9 +241,8 @@ def singleLabels2bert(single_labels, reference_dict, sentence_length=210):
 
 
 def singleLabelsBIO2bert(single_BIO_labels, reference_dict, sentence_length=210):
-    '''single_labels to lista [001...] wektorów dla tokenów
-       w kolejnych zdaniach. Wektory mają długość 29 - bo tyle jest
-       kategorii propagandowych + None'''
+    '''Converts label list of lists (in BIO scheme) into numpy ndarrays that are fed into Bert model.
+    Adds PAD masks where the sentence is shorter than the sentence_lenght argument'''
     
     labels_vector = []
     bools_vector = []
@@ -254,9 +265,8 @@ def singleLabelsBIO2bert(single_BIO_labels, reference_dict, sentence_length=210)
 
 
 def singleLabelsIOBES2bert(single_IOBES_labels, reference_dict, sentence_length=210):
-    '''single_labels to lista [001...] wektorów dla tokenów
-       w kolejnych zdaniach. Wektory mają długość X - bo tyle jest
-       kategorii propagandowych + None'''
+    '''Converts label list of lists (in IOBES scheme) into numpy ndarrays that are fed into Bert model.
+       Adds PAD masks where the sentence is shorter than the sentence_lenght argument'''
     
     labels_vector = []
     bools_vector = []

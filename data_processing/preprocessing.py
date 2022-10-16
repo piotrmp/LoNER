@@ -11,7 +11,8 @@ from tensorflow_text.python.ops import BertTokenizer
 
 
 def get_article_chunks(text_path, path_to_vocab, max_chunk_len, only_double_enter=True, pack_sentences=True):
-    '''Tekst artykułu dzielimy na chunki i dodajemy info o chunk-offsets'''
+    '''Takes the text of a given article and divides it into chunks of predefined length.
+    Returns a list of dictionaries containing text chunks and their offsets within the original text'''
     base_unc_tokenizer = BertTokenizer(vocab_lookup_table=path_to_vocab,
                                        lower_case=True)
     paths = os.path.split(text_path)
@@ -92,7 +93,7 @@ def labels2dictOfdicts(labels_path):
 
 
 def get_labels(article_path, all_labels_dict):
-    # extract article number from article path
+    """extract article number from article path"""
     artID = int(re.findall('[0-9]+', os.path.basename(article_path))[0])
     try:
         article_labels_dict = all_labels_dict[artID]
@@ -115,11 +116,9 @@ def reorganize_tuple(tuple_with_lists):
 
 
 def label_token(token_tuple, labels_dict):
-    '''Do tokenu ze zdania przyklejamy należącą do niego etykietę
-        Zwraca (token, label1,..., labelN)'''
-    
+    '''Appends label to a token'''
     resulting_tuple = []
-    resulting_tuple.append(token_tuple[0])  # indeks słowa ze słownika
+    resulting_tuple.append(token_tuple[0])
     for prop_cat in list(labels_dict.keys()):
         for offset in labels_dict[prop_cat]:
             if offset[0] <= token_tuple[1] and offset[1] >= token_tuple[2]:
@@ -142,8 +141,7 @@ def label_for_token(token_tuple, labels_dict):
 
 
 def label_token_dummy(token_tuple):
-    '''Do tokenu ze zdania przyklejamy należącą do niego etykietę
-        Zwraca (token, 'None')'''
+    '''Appends dummy label to a token'''
     
     resulting_tuple = []
     resulting_tuple.append(token_tuple[0])  # indeks słowa ze słownika

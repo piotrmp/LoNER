@@ -1,5 +1,5 @@
 """Bert with simple CRF layer on top.
-    Words that ar enot part of the sentence (PADs and such) are masked.
+    Words that are not part of the sentence (PADs and such) are masked.
     Used for single label classification"""
 
 import tensorflow_hub as hub
@@ -13,8 +13,11 @@ class BertPTC_CRF():
         self.input_word_ids = tf.keras.layers.Input(shape=(max_seq_length,), dtype=tf.int32, name='input_word_ids')
         self.input_mask = tf.keras.layers.Input(shape=(max_seq_length,), dtype=tf.int32, name='input_mask')
         self.input_type_ids = tf.keras.layers.Input(shape=(max_seq_length,), dtype=tf.int32, name='input_type_ids')
+        # Bert
         self.encoder = hub.KerasLayer(hub_path, trainable=True)
+        # Classification layer
         self.classifier = tf.keras.layers.Dense(num_labels, name='output', dtype=float_type)
+        # CRF layer
         self.CRF = CRF(num_labels, use_kernel=False)
 
     def getModelCRFLayer(self):

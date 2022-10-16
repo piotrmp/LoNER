@@ -1,6 +1,7 @@
 import math
 
 def KLdivergence(g_lengths_list, p_lengths_list, bin_size: int = 5):
+    """Computes Kullback–Leibler divergence between true and predicted lenghts of propaganda spans"""
 
     all_possible_lengths = list(set(g_lengths_list + p_lengths_list))
     sorted_lengths = sorted(all_possible_lengths)
@@ -31,6 +32,8 @@ def KLdivergence(g_lengths_list, p_lengths_list, bin_size: int = 5):
 
 
 def KLdivergence_with_None(g_lengths_list, p_lengths_list, bin_size: int = 5):
+    """Computes Kullback–Leibler divergence between true and predicted lenghts of propaganda spans
+        None option added for debugging purposes"""
 
     if len(p_lengths_list) == 0:
         return None
