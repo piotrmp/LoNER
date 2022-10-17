@@ -1,4 +1,3 @@
-from data_processing.parse import get_parse_matrix
 from data_processing.preprocessing import labels2dictOfdicts
 from data_processing.preprocessing import get_article_chunks
 from data_processing.preprocessing import get_labels
@@ -41,7 +40,7 @@ def output_artIDs_tokens_offsets(texts_path, vocab_path, sentence_length, nested
 
 
 def output_tokens_and_tags(texts_path, labels_path, vocab_path, sentence_length, nested=False, only_double_enter=False,
-                           normalize_encode=True, pack_sentences=True, parsing=False):
+                           normalize_encode=True, pack_sentences=True):
     '''
      Outputs two lists: list of all the tokens from the input data, and list of their matching labels
      '''
@@ -50,7 +49,6 @@ def output_tokens_and_tags(texts_path, labels_path, vocab_path, sentence_length,
     ultimate_labels_dict = labels2dictOfdicts(labels_path)
     token_sentences = []
     label_sentences = []
-    parse_matrices = []
     for article_path in article_paths:
         chunked_paragraph = get_article_chunks(text_path=article_path, path_to_vocab=vocab_path,
                                                max_chunk_len=sentence_length,
@@ -64,8 +62,5 @@ def output_tokens_and_tags(texts_path, labels_path, vocab_path, sentence_length,
                                                                                     normalize_encode=normalize_encode)
             token_sentences.append(chunk_sentence)
             label_sentences.append(chunk_labels)
-            parse_matrix = None
-            if parsing:
-                parse_matrix = get_parse_matrix(chunk['text'], chunk_offsets)
-            parse_matrices.append(parse_matrix)
-    return token_sentences, label_sentences, parse_matrices
+
+    return token_sentences, label_sentences

@@ -182,7 +182,7 @@ def singleLabelIOBESarray(labels_sentence, reference_dict, output_dict):
     return IOBES_array_labels
 
 
-def tokens2bert(list_of_flat_sentences, parses=None, sentence_length=210):
+def tokens2bert(list_of_flat_sentences, sentence_length=210):
     '''
     Converts list of lists into numpy arrays.
        Adds a CLS token at the beginning and the SEP token at the end of the sentence.
@@ -193,8 +193,7 @@ def tokens2bert(list_of_flat_sentences, parses=None, sentence_length=210):
     all_token_ids = []
     all_masks = []
     all_segments = []
-    all_parses = []
-    for list_of_token_ids, parse in zip(list_of_flat_sentences, parses):
+    for list_of_token_ids in list_of_flat_sentences:
         list_of_token_ids = list_of_token_ids[
                             :(sentence_length - 2)]
         sent = [101] + list_of_token_ids + [102]  # ids' of CLS and SEP
@@ -206,13 +205,8 @@ def tokens2bert(list_of_flat_sentences, parses=None, sentence_length=210):
         all_masks.append(pad_masks)
         all_segments.append(segment_ids)
         
-        if parse is not None:
-            MAX_K = parse.shape[1]
-            prefix = np.zeros((1, MAX_K))
-            suffix = np.zeros((pad_len + 1, MAX_K))
-            padded_parse = np.concatenate((prefix, parse, suffix), 0)
-            all_parses.append(padded_parse)
-    return np.array(all_token_ids), np.array(all_masks), np.array(all_segments), np.array(all_parses)
+
+    return np.array(all_token_ids), np.array(all_masks), np.array(all_segments)
 
 
 

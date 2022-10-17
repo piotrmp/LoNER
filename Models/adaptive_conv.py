@@ -74,7 +74,6 @@ class AdaptiveGaussianConvLayer(tf.keras.layers.Layer):
 
 
 
-
 class BertPTC_slaner():
     def __init__(self, float_type, num_labels: int, max_seq_length: int, hub_path, kernels: list, arch_params):
         super(BertPTC_slaner, self).__init__()
@@ -160,75 +159,3 @@ class BertPTC_slaner():
         model = tf.keras.Model(inputs=[self.input_word_ids, self.input_mask, self.input_type_ids], outputs=output)
         return model
 
-
-class ParseSpreadingLayer(tf.keras.layers.Layer):
-    def __init__(self,trainable=True):
-        super(ParseSpreadingLayer, self).__init__()
-        self.trainable=trainable
-    
-    def build(self, input_shape):
-        assert input_shape is not None
-        emb_shape, parse_shape = input_shape
-        assert len(emb_shape) == 3
-        assert len(parse_shape) == 3
-        assert emb_shape[1] == parse_shape[1]
-        self.scaling_lookup = self.add_weight(
-            name='Lookup table',
-            shape=(emb_shape[1] + 1),
-            trainable=self.trainable,
-            initializer=tf.keras.initializers.Ones)
-    
-    def call(self, inputs):
-        word_embeddings, parse_mask = inputs
-        parse_mask = tf.cast(parse_mask, word_embeddings.dtype)
-        parse_mask_t = tf.transpose(parse_mask, (0, 2, 1))
-        span_embeddings = tf.matmul(parse_mask_t, word_embeddings)
-        weight = tf.math.reduce_sum(parse_mask_t, axis=2)
-        weight = tf.reshape(weight, (-1, weight.shape[1], 1))
-        span_embeddings = tf.math.divide_no_nan(span_embeddings, weight)
-        span_embeddings_t = tf.transpose(span_embeddings, (0, 2, 1))
-        multiplier = tf.gather(self.scaling_lookup, tf.cast(weight, tf.int32))
-        parse_mask_t_scaled = tf.multiply(parse_mask_t, multiplier)
-        new_word_embeddings = tf.transpose(tf.matmul(span_embeddings_t, parse_mask_t_scaled),
-                                           (0, 2, 1)) + word_embeddings
-        weight2 = tf.math.reduce_sum(parse_mask_t_scaled, axis=1) + 1.0
-        weight2 = tf.reshape(weight2, (-1, weight2.shape[1], 1))
-        result = tf.math.divide_no_nan(new_word_embeddings, weight2)
-        return result
-
-
-class BertPTC_parse():
-    def __init__(self, float_type, num_labels: int, max_seq_length: int, hub_path, max_k):
-        super(BertPTC_parse, self).__init__()
-        self.input_word_ids = tf.keras.layers.Input(shape=(max_seq_length,), dtype=tf.int32, name='input_word_ids')
-        self.input_mask = tf.keras.layers.Input(shape=(max_seq_length,), dtype=tf.int32, name='input_mask')
-        self.input_type_ids = tf.keras.layers.Input(shape=(max_seq_length,), dtype=tf.int32, name='input_type_ids')
-        self.input_parse_mask = tf.keras.layers.Input(shape=(max_seq_length, max_k), dtype=tf.int32,
-                                                      name='input_parse_mask')
-        self.encoder = hub.KerasLayer(hub_path, trainable=True)
-        
-        # Custom parts
-        self.dropout = tf.keras.layers.Dropout(0.2, noise_shape=(None, max_seq_length, 1))
-        self.parse_spreading = ParseSpreadingLayer(trainable=False)
-        self.intermediate_classifier = tf.keras.layers.Dense(num_labels, dtype=float_type, activation='relu')
-        self.softmax_layer = tf.keras.layers.Softmax()
-    
-    def getSimpleModel(self):
-        # Obtain input from BERT
-        encoder_inputs = dict(
-            input_word_ids=self.input_word_ids,
-            input_mask=self.input_mask,
-            input_type_ids=self.input_type_ids,
-        )
-        bert_outputs = self.encoder(encoder_inputs)
-        bert_sequence_output = bert_outputs["sequence_output"]  # [batch_size, seq_length, 768].
-        bert_sequence_output = self.dropout(bert_sequence_output)
-        # Parse spreading
-        new_sequence_output = self.parse_spreading([bert_sequence_output, self.input_parse_mask])
-        # Compute category scores
-        scores = self.intermediate_classifier(new_sequence_output)  # [batch_size, seq_length, num_labels]
-        # Normalise output
-        output = self.softmax_layer(scores)
-        model = tf.keras.Model(
-            inputs=[self.input_word_ids, self.input_mask, self.input_type_ids, self.input_parse_mask], outputs=output)
-        return model
