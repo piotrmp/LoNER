@@ -3,7 +3,7 @@
 
 This repository contains the code for our solution for identifying propaganda techniques in text. 
 
-The source code was prepared within a study [Where Does It End? Long Named Entity Recognition for Propaganda Detection and Beyond](TODO), presented at the [Workshop on NLP applied to Misinformation](NLP-Misinfo-2023), organised at the [SEPLN 2023](http://sepln2023.sepln.org) Conference, held in Jaén, Spain on the 26th of September, 2023. Please consult [the paper](TODO) for details on the work.
+The source code was prepared within a study [Where Does It End? Long Named Entity Recognition for Propaganda Detection and Beyond](https://ceur-ws.org/Vol-3525/paper3.pdf), presented at the [Workshop on NLP applied to Misinformation](NLP-Misinfo-2023), organised at the [SEPLN 2023](http://sepln2023.sepln.org) Conference, held in Jaén, Spain on the 26th of September, 2023. Please consult [the paper](https://ceur-ws.org/Vol-3525/paper3.pdf) for details on the work.
 
 The research was done within the [HOMADOS](https://homados.ipipan.waw.pl/) project at [Institute of Computer Science](https://ipipan.waw.pl/), Polish Academy of Sciences.
 
